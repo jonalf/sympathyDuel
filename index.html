@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet"
+      type="text/css" href="sd.css" />
+<script src="jquery-1.8.3.min.js"></script>
+<title>Sympathy Duel</title>
+
+</head>
+
+<body>
+
+  <div id="gamearea">
+  
+    <div id="blackcandle">
+      <br>
+    </div>
+    
+    <div id="mind">
+      
+      <div id="reddeck">
+	<br>
+	<img src="images/cards/back.jpg" class="card" onclick="dealCard(0)" id="rdeck">
+	<img src="images/end1.png" width="110" onclick="endTurn(0)" id="rend">
+      </div>
+      
+      <div id="redmind">
+	<br>
+      </div>
+
+      <div id="blackmind">
+	<br>
+      </div>
+
+      <div id="blackdeck">
+	<br>
+	<img src="images/cards/back.jpg" class="card" onclick="dealCard(1)" id="bdeck">
+	<img src="images/end2.png" width="105" onclick="endTurn(1)" id="bend">
+      </div>
+
+    </div>
+    
+    <div id="redcandle">
+      <br>
+    </div>
+    
+  </div>
+
+<script src="sd.js"></script> 
+<script>
+  $(document).ready(function() {
+  init();
+  });
+</script>
+</body>
+</html>
