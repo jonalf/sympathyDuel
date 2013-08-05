@@ -39,14 +39,14 @@ body {
 }
 
 .selected3 {
-    border: 5px solid blue;
+    border: 5px solid green;
+    border-radius: 55px;
 }
 
 
 #gamearea {
     width:800px;
     height:600px;
-    background-color:gray;
     margin:0 auto;
 }
 
@@ -70,7 +70,6 @@ body {
 #mind {
     width:550px;
     height:100%;
-    background-color:white;
     float:left;
 }
 

@@ -10,6 +10,7 @@ var selected;
 var cardClass = "card";
 var canDraw = true;
 var discarding = false;
+var stone = false;
 
 var deck = new Array(2)
 deck[RED] = new Array();
@@ -156,10 +157,10 @@ function dealCard( player ) {
     }
 }
 
-function isGameOver() {
+function isGameOver( player ) {
     
     var count = 0;
-    if ( turn == RED ) {
+    if ( player == RED ) {
 	for (var i=0; i<candle[BLACK].length; i++)
 	    if ( getColor( candle[BLACK][i] ) == BLACK )
 		count++;
@@ -174,30 +175,52 @@ function isGameOver() {
 
 function endGame() {
     if ( turn == RED ) {
-	$("#blackcandle").empty();
-	$("#blackmind").html("<br><br><h1>Red Wins!</h1>");
+	if ( !heartSuccess() ) {
+	    $("#blackcandle").empty();
+	    $("#blackmind").html("<br><br><h1>Red Wins!</h1>");
+	    turn = 3;
+	}
+	else {
+	    turn = BLACK;
+	    stone = true;
+	    $("#bend").addClass("selected3");
+	    console.log("heart of stone");
+	}
     }
     else if ( turn == BLACK ) {
-	$("#redcandle").empty();
-	$("#redmind").html("<br><br><h1>Black Wins!</h1>");
+	if ( !heartSuccess() ) {
+	    $("#redcandle").empty();
+	    $("#redmind").html("<br><br><h1>Black Wins!</h1>");
+	    turn = 3;
+	}
+	else {
+	    turn = RED;
+	    stone = true;
+	    $("#rend").addClass("selected3");
+	    console.log("heart of stone");
+	}
     }
-    turn = 3;
 }
 
 function endTurn( player ) {
     if ( player == turn ) {
 
-	if ( !discarding ) {
+	if ( stone && !(isGameOver(RED) || isGameOver(BLACK)) ) {
+	    console.log("finito " + isGameOver() );
+	    stone = false;
+	    switchTurns( player );
+	}
+	else if ( !stone && !discarding ) {
 	    $(".selected").removeClass("selected");
 	    $(".selected2").removeClass("selected2");
 	    if ( turn == RED )
-		$("#rend").addClass("selected2");
+		$("#rend").addClass("selected3");
 	    else if (turn == BLACK)
-		$("#bend").addClass("selected2");
+		$("#bend").addClass("selected3");
 
 	    discarding = true;
 	}
-	else {
+	else if ( !stone ) {
 	    switchTurns( player );
 	}
     }
@@ -212,6 +235,7 @@ function switchTurns( player ) {
     console.log(discarding);
     $(".selected").removeClass("selected");    
     $(".selected2").removeClass("selected2");    
+    $(".selected3").removeClass("selected3");    
     turn = (turn + 1) % 2;
     if ( turn == RED )
 	$("#rdeck").addClass("selected2");
@@ -266,7 +290,7 @@ function convert( card ) {
 	    $(".selected").remove();
 	    selected = null;
 
-	    if ( isGameOver() ) {
+	    if ( isGameOver(turn) ) {
 		console.log( "game over" );
 		endGame();
 	    }
@@ -274,6 +298,35 @@ function convert( card ) {
 	    $(".selected2").removeClass("selected2");
 	}
     }
+}
+
+function heartSuccess() {
+    
+    if ( turn == RED ) {
+	for (var m=0; m < mind[BLACK].length; m++)
+	    for (var c=0; c < candle[BLACK].length; c++)
+		if ( canConvert( mind[BLACK][m], candle[BLACK][c]) ) 
+		    return true;
+	return false;
+    }
+    else if ( turn == BLACK ) {
+	for (var m=0; m < mind[RED].length; m++)
+	    for (var c=0; c < candle[RED].length; c++)
+		if ( canConvert( mind[RED][m], candle[RED][c]) ) 
+		    return true;
+	return false;
+    } 
+}
+
+function canConvert( card1, card2 ) {
+    var c1Color = getColor( card1 );
+    var c1Rank = getRank(card1);
+    var c2Color = getColor( card2 );
+    var c2Rank = getRank(card2);
+    
+    return ( (Math.abs( c1Rank - c2Rank ) == 1 ||
+	      Math.abs( c1Rank - c2Rank ) == 12) && 
+	     c1Color != c2Color );
 }
 
 function getColor( card ) {
