@@ -2,8 +2,8 @@
 <html>
 <head>
 <link rel="stylesheet"
-      type="text/css" href="sd.css" />
-<script src="jquery-1.8.3.min.js"></script>
+      type="text/css" href="/static/sd.css" />
+<script src="/static/jquery-1.8.3.min.js"></script>
 <title>Sympathy Duel</title>
 
 </head>
@@ -20,8 +20,8 @@
       
       <div id="reddeck">
 	<br>
-	<img src="images/cards/back.jpg" class="card" onclick="dealCard(0)" id="rdeck">
-	<img src="images/end1.png" width="105" onclick="endTurn(0)" id="rend">
+	<img src="/static/images/cards/back.jpg" class="card" onclick="dealCard(0)" id="rdeck">
+	<img src="/static/images/end1.png" width="105" onclick="endTurn(0)" id="rend">
       </div>
       
       <div id="redmind">
@@ -34,8 +34,8 @@
 
       <div id="blackdeck">
 	<br>
-	<img src="images/cards/back.jpg" class="card" onclick="dealCard(1)" id="bdeck">
-	<img src="images/end2.png" width="105" onclick="endTurn(1)" id="bend">
+	<img src="/static/images/cards/back.jpg" class="card" onclick="dealCard(1)" id="bdeck">
+	<img src="/static/images/end2.png" width="105" onclick="endTurn(1)" id="bend">
       </div>
 
     </div>
@@ -46,7 +46,7 @@
     
   </div>
 
-<script src="sd.js"></script> 
+<script src="/static/sd.js"></script> 
 <script>
   $(document).ready(function() {
   init();

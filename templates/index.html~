@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %} Sympath Duel {% endblock %}
+
+{% block content %}
+  <div id="gamearea">
+  
+    <div id="blackcandle">
+      <br>
+    </div>
+    
+    <div id="mind">
+      
+      <div id="reddeck">
+	<br>
+	<img src="/static/images/cards/back.jpg" class="card" onclick="dealCard(0)" id="rdeck">
+	<img src="/static/images/end1.png" width="105" onclick="endTurn(0)" id="rend">
+      </div>
+      
+      <div id="redmind">
+	<br>
+      </div>
+
+      <div id="blackmind">
+	<br>
+      </div>
+
+      <div id="blackdeck">
+	<br>
+	<img src="/static/images/cards/back.jpg" class="card" onclick="dealCard(1)" id="bdeck">
+	<img src="/static/images/end2.png" width="105" onclick="endTurn(1)" id="bend">
+      </div>
+
+    </div>
+    
+    <div id="redcandle">
+      <br>
+    </div>
+    
+  </div>
+{% endblock %}
+
+{% block footer %}
+<script src="/static/sd.js"></script> 
+<script>
+  $(document).ready(function() {
+  init();
+  });
+</script>
+{% endblock %}
