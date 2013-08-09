@@ -72,13 +72,13 @@ function init() {
 	candle[RED].push( deck[RED].pop() );
 	candle[BLACK].push( deck[BLACK].pop() );
 
-	rc.setAttribute("src", "/static/images/cards/" + 
+	rc.setAttribute("src", "static/images/cards/" + 
 			candle[RED][candle[RED].length-1] +".png");
 	rc.setAttribute("class", "card");
 	rc.setAttribute("onclick", "convert(\"" + 
 			candle[RED][candle[RED].length-1] + "\")");
 
-	bc.setAttribute("src","/static/images/cards/" + 
+	bc.setAttribute("src","static/images/cards/" + 
 			candle[BLACK][candle[BLACK].length-1]+".png");
 	bc.setAttribute("class", "card");
 	bc.setAttribute("onclick", "convert(\"" + 
@@ -90,8 +90,8 @@ function init() {
 	$("#blackcandle").append(bc);
 	$("#blackcandle").append("<br><br>");
 
-	redRanks.push( getRank(candle[RED][candle[RED].length-1]) );
-	blackRanks.push( getRank(candle[BLACK][candle[BLACK].length-1]));
+	redRanks.push(getRank(candle[RED][candle[RED].length-1]) );
+	blackRanks.push(getRank(candle[BLACK][candle[BLACK].length-1]));
     }
 
     //find out starting player
@@ -107,20 +107,14 @@ function init() {
 
     if ( turn == RED )	
 	$("#rdeck").addClass("selected2");
-    else
+    else {
 	$("#bdeck").addClass("selected2");
+	AITurn();
+    }
 }
 
-
 function dealCard( player ) {
-
-    var chills = false;
-
     if ( turn == player && canDraw ) {
-
-	var nc = document.createElement("img");
-
-	nc.setAttribute("class", cardClass);
 
 	if ( player == RED )		    
 	    var m = $("#redmind")
@@ -135,26 +129,242 @@ function dealCard( player ) {
 
 	var newCard = deck[player].pop();
 
-	for ( var i=0; i < mind[player].length; i++ )
-	    if ( mind[player][i][0] == newCard[0] ) {
-		chills = true;
-		switchTurns(player);
-		break;
-	    }
-		
-	mind[player].push(newCard);
-	if (chills)
-	    discardAll( player );
+	if (isChilled( player, newCard )) {
+	    mind[player].push( newCard );
+	    chilled( player );
+	}
 	else {
-	    nc.setAttribute("src", "/static/images/cards/" + newCard + ".png");
-	    nc.setAttribute("onclick", "selectCard(\"" + 
-			    newCard + "\")");
-	    m.append(nc);
-		
-	    if ( mind[player].length == 6 || mind[player].length == 8 )
-		resizeMind( player );
+	    mind[player].push(newCard);
+	    dealCard2( player, newCard, m );
 	}
     }
+}
+
+
+function isChilled( player, newCard ) {
+    for ( var i=0; i < mind[player].length; i++ )
+	if ( mind[player][i][0] == newCard[0] )
+	    return true;
+    return false;
+}
+
+function chilled( player ) {
+    discardAll( player );
+    switchTurns();
+}
+
+function AITurn() {
+    console.log("AITurn");
+
+    var maxMind = 4;
+    var m = $("#blackmind")
+
+    if ( m.text() == "Binder's Chills" )
+	m.html("");
+ 
+    //deal some cards, switch turns if chilled
+    for (var i=0; i<maxMind; i++) {
+	if ( deck[BLACK].length == 0 )
+	    reDeal( BLACK );
+
+	var newCard = deck[BLACK].pop();    
+
+	if ( isChilled( BLACK, newCard ) ) {
+	    mind[BLACK].push(newCard);
+	    chilled( BLACK );
+	    return;
+	}
+	mind[BLACK].push(newCard);
+	dealCard2( BLACK, newCard, m );
+    }
+
+    //attempt to convert red candle    
+    var mindCards = new Array();
+    var candleCards = new Array();
+    for (var i=0; i < mind[BLACK].length; i++) {
+	for (var j=0; j < candle[RED].length; j++) {
+
+	    if ( mindCards.indexOf(mind[BLACK][i]) == -1 &&
+		 candleCards.indexOf(candle[RED][j]) == -1  &&
+		 canConvert( mind[BLACK][i], candle[RED][j]) ) {
+		     
+		mindCards.push(mind[BLACK][i]);
+		candleCards.push(candle[RED][j]);
+	    }
+	}
+    }
+    AIConvert( mindCards, candleCards );
+
+    //defend black candle
+    mindCards = new Array();
+    candleCards = new Array();
+    for (var i=0; i < mind[BLACK].length; i++) {
+	for (var j=0; j < candle[BLACK].length; j++) {
+
+	    if ( mindCards.indexOf(mind[BLACK][i]) == -1 &&
+		 candleCards.indexOf(candle[BLACK][j]) == -1  &&
+		 canConvert( mind[BLACK][i], candle[BLACK][j]) ) {
+		     
+		mindCards.push(mind[BLACK][i]);
+		candleCards.push(candle[BLACK][j]);
+	    }
+	}
+    }
+    AIConvert( mindCards, candleCards );
+
+    if ( isGameOver(BLACK) ) {
+	if ( heartSuccess( RED ) )
+	    stoneF( RED );
+	else
+	    endGame(BLACK);    
+    }
+    else
+	switchTurns();
+}
+
+function AIStone() {
+
+    console.log("AI Stone");
+    console.log(mind[BLACK] );
+    console.log(candle[BLACK]);
+
+    var mindCards = new Array();
+    var candleCards = new Array();
+    for (var i=0; i < mind[BLACK].length; i++) {
+	for (var j=0; j < candle[BLACK].length; j++) {
+
+	    if ( mindCards.indexOf(mind[BLACK][i]) == -1 &&
+		 candleCards.indexOf(candle[BLACK][j]) == -1  &&
+		 canConvert( mind[BLACK][i], candle[BLACK][j]) ) {
+		     
+		mindCards.push(mind[BLACK][i]);
+		candleCards.push(candle[BLACK][j]);
+	    }
+	}
+    }
+    console.log(mindCards);
+    console.log(candleCards);
+    AIConvert( mindCards, candleCards );
+    turn = BLACK;
+    switchTurns();
+}
+
+function AIConvert( mindCards, candleCards) {
+    for (var i=0; i < mindCards.length; i++)
+	convert2( BLACK, mindCards[i], candleCards[i] );
+}
+
+function convert( card ) {
+    convert2( turn, selected, card );
+}
+
+function convert2( player, mindCard, candleCard ) {
+
+    if ( canConvert( mindCard, candleCard ) ) {
+	var candleColor = getColor(candleCard);
+	//update candle, mind and discard arrays
+	mind[player].splice( mind[player].indexOf( mindCard ), 1 );
+	discard[candleColor].push(candleCard);
+	
+	var i = candle[RED].indexOf( candleCard );
+	if ( i == -1 ) {
+	    i = candle[BLACK].indexOf( candleCard );
+	    candle[BLACK][i] = mindCard;
+	}
+	else
+	    candle[RED][i] = mindCard;
+	
+	//change view
+	$("img[src='static/images/cards/" + mindCard + ".png']").remove();
+	var c = $("img[src='static/images/cards/" + candleCard + ".png']");
+	c.attr("src", "static/images/cards/" + mindCard + ".png");
+	c.attr("onclick", "convert(\"" + mindCard + "\")");
+	selected = null;
+
+	canDraw = false;
+	$(".selected2").removeClass("selected2");
+    }
+}
+
+function endTurn( player ) {
+
+    if ( player == turn ) {
+
+	if ( !discarding ) {
+	    discarding = true;
+	    $(".selected").removeClass("selected");
+	    $(".selected2").removeClass("selected2");
+	    if ( player == RED )
+		$("#rend").addClass("selected3");
+	    else if ( player == BLACK)
+		$("#bend").addClass("selected3");
+	}
+
+	else if ( isGameOver(player) && heartSuccess( (player+1)%2 )) {
+	    console.log("cond1");
+	    stoneF( (player+1) % 2 );
+	}
+	else if ( isGameOver(player) ) {
+	    console.log("cond2");
+	    endGame( player );
+	}
+	else {
+	    console.log("cond3");
+	    switchTurns();
+	}
+    }
+}
+
+function endGame( player ) {
+
+    if ( player == RED ) {
+	$("#blackcandle").empty();
+	$("#blackmind").html("<br><br><h1>Red Wins!</h1>");
+	turn = 3;
+    }
+    else if (player == BLACK) {
+	$("#redcandle").empty();
+	$("#redmind").html("<br><br><h1>Black Wins!</h1>");
+	turn = 3;
+    }
+}
+
+function stoneF( player ) {
+    if ( player == RED ) {
+	console.log("red stone");
+	switchTurns();
+	canDraw = false;
+	$(".selected2").removeClass("selected2");
+	$("#rend").addClass("selected3");
+    }
+    else if ( player == BLACK )
+	AIStone();
+//	$("#bend").addClass("selected3");
+}
+
+function dealCard2( player, newCard, mindDiv ) {
+    var nc = document.createElement("img");
+    nc.setAttribute("class", cardClass);
+
+    nc.setAttribute("src", "static/images/cards/" + newCard + ".png");
+    nc.setAttribute("onclick", "selectCard(\"" + 
+		    newCard + "\")");
+    mindDiv.append(nc);
+    
+    if ( mind[player].length == 6 || mind[player].length == 8 )
+	resizeMind( player );
+}
+
+function discardOne( player, card ) {
+    $("img[src='static/images/cards/" + card + ".png']").remove();
+    mind[player].splice( mind[player].indexOf(card), 1 );
+    discard[player].push(card);
+}
+
+function pickCard( card ) {
+    $(".selected").removeClass("selected");
+    selected = card;
+    $("img[src='static/images/cards/" + card + ".png']").addClass("selected");
 }
 
 function isGameOver( player ) {
@@ -173,93 +383,37 @@ function isGameOver( player ) {
     return count == 0
 }
 
-function endGame() {
-    if ( turn == RED ) {
-	if ( !heartSuccess() ) {
-	    $("#blackcandle").empty();
-	    $("#blackmind").html("<br><br><h1>Red Wins!</h1>");
-	    turn = 3;
-	}
-	else {
-	    turn = BLACK;
-	    stone = true;
-	    $("#bend").addClass("selected3");
-	    console.log("heart of stone");
-	}
-    }
-    else if ( turn == BLACK ) {
-	if ( !heartSuccess() ) {
-	    $("#redcandle").empty();
-	    $("#redmind").html("<br><br><h1>Black Wins!</h1>");
-	    turn = 3;
-	}
-	else {
-	    turn = RED;
-	    stone = true;
-	    $("#rend").addClass("selected3");
-	    console.log("heart of stone");
-	}
-    }
-}
-
-function endTurn( player ) {
-    if ( player == turn ) {
-
-	if ( stone && !(isGameOver(RED) || isGameOver(BLACK)) ) {
-	    console.log("finito " + isGameOver() );
-	    stone = false;
-	    switchTurns( player );
-	}
-	else if ( !stone && !discarding ) {
-	    $(".selected").removeClass("selected");
-	    $(".selected2").removeClass("selected2");
-	    if ( turn == RED )
-		$("#rend").addClass("selected3");
-	    else if (turn == BLACK)
-		$("#bend").addClass("selected3");
-
-	    discarding = true;
-	}
-	else if ( !stone ) {
-	    switchTurns( player );
-	}
-    }
-}	
-
-function switchTurns( player ) {
+function switchTurns() {
 
     selected = null;
     cardClass = "card";
     canDraw = true;
     discarding = false;
-    console.log(discarding);
+
     $(".selected").removeClass("selected");    
     $(".selected2").removeClass("selected2");    
     $(".selected3").removeClass("selected3");    
     turn = (turn + 1) % 2;
+    
+    console.log("switching to: " + turn);
+
     if ( turn == RED )
 	$("#rdeck").addClass("selected2");
     else if ( turn == BLACK )
-	$("#bdeck").addClass("selected2");
+	AITurn();
+//	$("#bdeck").addClass("selected2");
 }
 	
 function selectCard( card ) {
-    
     if ( getColor(card) == turn ) {
-	if ( discarding ) {
-	    $("img[src='/static/images/cards/" + card + ".png']").remove();
-	    mind[turn].splice( mind[turn].indexOf(card), 1 );
-	    discard[turn].push(card);
-	}
-	else {
-	    $(".selected").removeClass("selected");
-	    selected = card;
-	    $("img[src='/static/images/cards/" + card + ".png']").addClass("selected");
-	}
+	if ( discarding )
+	    discardOne( turn, card );
+	else
+	    pickCard( card );
     }
 }
 
-function convert( card ) {
+function convert_OLD( card ) {
 
     if ( selected != null ) {
 	
@@ -284,8 +438,8 @@ function convert( card ) {
 		candle[RED][i] = selected;
 
 	    //change view
-	    var c = $("img[src='/static/images/cards/" + card + ".png']");
-	    c.attr("src", "/static/images/cards/" + selected + ".png");
+	    var c = $("img[src='static/images/cards/" + card + ".png']");
+	    c.attr("src", "static/images/cards/" + selected + ".png");
 	    c.attr("onclick", "convert(\"" + selected + "\")");
 	    $(".selected").remove();
 	    selected = null;
@@ -300,16 +454,16 @@ function convert( card ) {
     }
 }
 
-function heartSuccess() {
+function heartSuccess( player ) {
     
-    if ( turn == RED ) {
+    if ( player == BLACK ) {
 	for (var m=0; m < mind[BLACK].length; m++)
 	    for (var c=0; c < candle[BLACK].length; c++)
 		if ( canConvert( mind[BLACK][m], candle[BLACK][c]) ) 
 		    return true;
 	return false;
     }
-    else if ( turn == BLACK ) {
+    else if ( player == RED ) {
 	for (var m=0; m < mind[RED].length; m++)
 	    for (var c=0; c < candle[RED].length; c++)
 		if ( canConvert( mind[RED][m], candle[RED][c]) ) 
@@ -370,7 +524,7 @@ function resizeMind( player ) {
     for (var i=0; i < mind[player].length; i++) {
 	var nc = document.createElement("img");
 	nc.setAttribute("class", cardClass);
-	nc.setAttribute("src", "/static/images/cards/"+mind[player][i]+".png");
+	nc.setAttribute("src", "static/images/cards/"+mind[player][i]+".png");
 	nc.setAttribute("onclick", "selectCard(\""
 			+mind[player][i]+"\")");
 	m.append(nc);
@@ -407,4 +561,19 @@ function printDecks() {
     console.log("Black Deck: " + deck[BLACK]);
     console.log("Black Mind: " + mind[BLACK]);
     console.log("Black Disc: " + discard[BLACK]);
+}
+
+function pause( milis ) {
+    d = new Date();
+    start = d.getTime();
+    do {
+	d = new Date();
+    }
+    while ( d.getTime() < start + milis);
+}
+
+function test() {
+    console.log("start");
+    pause(1000);
+    console.log("end");
 }
